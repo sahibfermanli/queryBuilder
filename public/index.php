@@ -13,7 +13,7 @@ $users = DB::query()
         $join->orWhere('stores.id', 3);
     })
     ->leftJoin('users as created_user', 'users.created_by', '=', 'created_user.id')
-    ->select(['users.id', 'users.name', 'users.phone', 'stores.title as store', 'created_user.name as created_user_name'])
+    ->select(['users.id', 'users.name', 'users.phone', 'created_user.name as created_user_name'])
     ->where('users.id', '<', 10)
     ->where(function (DB $query) {
         $query->where('users.name', 'sahib');
@@ -26,6 +26,9 @@ $users = DB::query()
         $query->orWhere('users.name', 'sahib3');
         $query->orWhere('users.name', 'nicat');
     })
+    ->groupBy([
+        'users.id'
+    ])
     ->limit(3)
     ->get();
 

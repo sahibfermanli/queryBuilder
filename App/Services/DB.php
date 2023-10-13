@@ -12,6 +12,7 @@ class DB
     private string $table;
     private string $select = '*';
     private array $order_by = [];
+    private array $group_by = [];
     private array $join = [];
     private array $where = [];
     private array $or_where = [];
@@ -51,6 +52,19 @@ class DB
             $this->select = implode(', ', $columns);
         } else {
             $this->select = $columns;
+        }
+
+        return $this;
+    }
+
+    public function groupBy(string|array $column): static
+    {
+        if (is_array($column)) {
+            foreach ($column as $col) {
+                $this->group_by[] = $col;
+            }
+        } else {
+            $this->group_by[] = $column;
         }
 
         return $this;
@@ -349,6 +363,12 @@ class DB
 
         // where
         $sql .= $this->getWhereQuery($addBindings);
+
+        // groupBy
+        if (count($this->group_by)) {
+            $group_by = implode(', ', $this->group_by);
+            $sql .= " GROUP BY $group_by";
+        }
 
         // orderBy
         if (count($this->order_by)) {
