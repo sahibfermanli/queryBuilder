@@ -76,10 +76,21 @@ class DB
             if ($first instanceof Closure) {
                 $sub = new static('');
                 $first($sub);
+
                 if (count($sub->getOnSqlArr())) {
                     $onSql = implode(' and ', $sub->getOnSqlArr());
+
+                    $sql = "$type $table ON $onSql";
+
+                    $onWhereSql = $sub->getWhereQuery(false, true, true);
+
+                    if ($onWhereSql) {
+                        $sql .= $onWhereSql;
+                    }
+
                     $this->join[] = [
-                        'sql' => "$type $table ON $onSql",
+                        'sql' => $sql,
+                        'binding' => $sub->getBindings(),
                     ];
                 }
             } else {
@@ -235,7 +246,7 @@ class DB
         }
     }
 
-    private function getWhereQuery($addBindings = true, $onlyConditions = false): string
+    private function getWhereQuery($addBindings = true, $onlyConditions = false, $isJoinWhere = false): string
     {
         $sql = '';
         $has_where = false;
@@ -252,7 +263,8 @@ class DB
         }
 
         if (count($where_arr)) {
-            $where_sql = implode(' AND ', $where_arr);
+            $where_base = $isJoinWhere ? " AND " : "";
+            $where_sql = $where_base . implode(' AND ', $where_arr);
 
             if ($addBindings) {
                 $this->setBindingsForQuery($where_bindings, $where_sql);
@@ -274,7 +286,7 @@ class DB
         }
 
         if (count($or_where_arr)) {
-            $or_where_base = $has_where ? " OR " : "";
+            $or_where_base = ($has_where || $isJoinWhere) ? " OR " : "";
             $or_where_sql = $or_where_base . implode(' OR ', $or_where_arr);
 
             if ($addBindings) {
